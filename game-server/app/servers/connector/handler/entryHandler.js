@@ -34,9 +34,41 @@ pro.entry = function(msg, session, next) {
 		return;
 	}
 
-	var uid, players, player;
+	var uid, player;
 	async.waterfall([
-		function(cb) {
+		function(cb){
+			userDao.getPlayersByUid(msg.userId, cb);
+		}, function(res, cb) {
+			player = res;
+			self.app.get('sessionService').kick(msg.userId, cb);
+		}, function(res, cb) {
+			session.bind(msg.userId, cb);
+		}, function(cb) {
+			if (!player) {
+				next(null, {code: Code.OK});
+				return ;
+			}
+
+			session.set('playername', player.username);
+			session.set('playerId', player.userId);
+			session.on('closed', onUserLeave.bind(null, self.app));
+			session.pushAll(cb);
+		}, function(cb) {
+			self.app.rpc.chat.chatRemote.add(session, player.userId, player.username, channelUtil.getGlobalChannelName(), cb);
+		}
+	], function(error) {
+		if(err) {
+			next(err, {code: Code.FAIL});
+			return;
+		}
+
+		next(null, {code: Code.OK, player: player});
+	}
+
+
+
+
+		/*function(cb) {
 			// auth token
 			self.app.rpc.auth.authRemote.auth(session, token, cb);
 		}, function(code, user, cb) {
@@ -67,7 +99,7 @@ pro.entry = function(msg, session, next) {
 
 			player = players[0];
 
-			session.set('serverId', self.app.get('areaIdMap')[player.areaId]);
+			//session.set('serverId', self.app.get('areaIdMap')[player.areaId]);
 			session.set('playername', player.name);
 			session.set('playerId', player.id);
 			session.on('closed', onUserLeave.bind(null, self.app));
@@ -83,7 +115,7 @@ pro.entry = function(msg, session, next) {
 		}
 
 		next(null, {code: Code.OK, player: players ? players[0] : null});
-	});
+	});*/
 };
 
 var onUserLeave = function (app, session, reason) {

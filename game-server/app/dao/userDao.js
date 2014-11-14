@@ -47,7 +47,7 @@ userDao.getUserInfo = function (username, passwd, cb) {
  * @param {function} cb Callback function.
  */
 userDao.getPlayersByUid = function(uid, cb){
-	var sql = 'select * from Player where userId = ?';
+	/*var sql = 'select * from Player where userId = ?';
 	var args = [uid];
 
 	pomelo.app.get('dbclient').query(sql,args,function(err, res) {
@@ -62,7 +62,9 @@ userDao.getPlayersByUid = function(uid, cb){
 		} else {
 			utils.invokeCallback(cb, null, res);
 		}
-	});
+	});*/
+
+	utils.invokeCallback(cb, null, {userId: 100, username: 'zhaoyier'});
 };
 
 /**

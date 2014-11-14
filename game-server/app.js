@@ -1,8 +1,8 @@
 var pomelo = require('pomelo');
-var areaService = require('./app/services/areaService');
+//var areaService = require('./app/services/areaService');
 var instanceManager = require('./app/services/instanceManager');
-var scene = require('./app/domain/area/scene');
-var instancePool = require('./app/domain/area/instancePool');
+//var scene = require('./app/domain/area/scene');
+//var instancePool = require('./app/domain/area/instancePool');
 var dataApi = require('./app/util/dataApi');
 var routeUtil = require('./app/util/routeUtil');
 var playerFilter = require('./app/servers/area/filter/playerFilter');
@@ -22,21 +22,20 @@ app.configure('production|development', function() {
 	app.enable('systemMonitor');
   require('./app/util/httpServer');
 
-	//var sceneInfo = require('./app/modules/sceneInfo');
 	var onlineUser = require('./app/modules/onlineUser');
 	if(typeof app.registerAdmin === 'function'){
 		//app.registerAdmin(sceneInfo, {app: app});
 		app.registerAdmin(onlineUser, {app: app});
 	}
 	//Set areasIdMap, a map from area id to serverId.
-	if (app.serverType !== 'master') {
+	/*if (app.serverType !== 'master') {
 		var areas = app.get('servers').area;
 		var areaIdMap = {};
 		for(var id in areas){
 			areaIdMap[areas[id].area] = areas[id].id;
 		}
 		app.set('areaIdMap', areaIdMap);
-	}
+	}*/
 	// proxy configures
 	app.set('proxyConfig', {
 		cacheMsg: true,
@@ -52,21 +51,11 @@ app.configure('production|development', function() {
 	});
 
 	// route configures
-	app.route('area', routeUtil.area);
+	//app.route('area', routeUtil.area);
 	app.route('connector', routeUtil.connector);
 
 	app.loadConfig('mysql', app.getBase() + '/../shared/config/mysql.json');
 	app.filter(pomelo.filters.timeout());
-
-  /*
-  // master high availability
-  app.use(masterhaPlugin, {
-    zookeeper: {
-      server: '127.0.0.1:2181',
-      path: '/pomelo/master'
-    }
-  });
-  */
 });
 
 // Configure for auth server
@@ -76,7 +65,7 @@ app.configure('production|development', 'auth', function() {
 });
 
 // Configure for area server
-app.configure('production|development', 'area', function(){
+/*app.configure('production|development', 'area', function(){
 	app.filter(pomelo.filters.serial());
 	app.before(playerFilter());
 
@@ -88,27 +77,11 @@ app.configure('production|development', 'area', function(){
 	}else{
 		scene.init(dataApi.area.findById(server.area));
 		app.areaManager = scene;
-    /*
-     kill -SIGUSR2 <pid>
-     http://localhost:3272/inspector.html?host=localhost:9999&page=0
-    */
-    /*
-    // disable webkit-devtools-agent
-    var areaId = parseInt(server.area);
-    if(areaId === 3) { // area-server-3
-      require('webkit-devtools-agent');
-      var express = require('express');
-      var expressSvr = express.createServer();
-      expressSvr.use(express.static(__dirname + '/devtools_agent_page'));
-      var tmpPort = 3270 + areaId - 1;
-      expressSvr.listen(tmpPort);
-    }
-    */
 	}
 
 	//Init areaService
 	areaService.init();
-});
+});*/
 
 app.configure('production|development', 'manager', function(){
 	var events = pomelo.events;
@@ -119,11 +92,10 @@ app.configure('production|development', 'manager', function(){
 });
 
 // Configure database
-app.configure('production|development', 'area|auth|connector|master', function() {
+app.configure('production|development', 'connector|master', function() {
 	var dbclient = require('./app/dao/mysql/mysql').init(app);
 	app.set('dbclient', dbclient);
-	// app.load(pomelo.sync, {path:__dirname + '/app/dao/mapping', dbclient: dbclient});
-  app.use(sync, {sync: {path:__dirname + '/app/dao/mapping', dbclient: dbclient}});
+	app.use(sync, {sync: {path:__dirname + '/app/dao/mapping', dbclient: dbclient}});
 });
 
 app.configure('production|development', 'connector', function(){
